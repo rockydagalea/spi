@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Size Selector</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f4f8;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+            margin-top: 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .radio-group, .dropdown-group, .input-group {
+            margin-bottom: 20px;
+        }
+
+        .radio-group input {
+            margin-left: 10px;
+            margin-right: 5px;
+        }
+
+        .size-dropdown {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+            font-size: 16px;
+        }
+
+        .size-dropdown option {
+            padding: 5px;
+            color: black;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #output {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #eaf5ea;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        #output p {
+            margin: 5px 0;
+        }
+
+        h4 {
+            margin-top: 15px;
+            color: #4CAF50;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Select Size Based on Brand</h1>
+
+    <div class="container">
+        <div class="radio-group">
+            <label for="brand">Brand:</label>
+            <input type="radio" name="brand" value="OC" checked> OC
+            <input type="radio" name="brand" value="Knauf"> Knauf
+        </div>
+
+        <div class="dropdown-group">
+            <label for="size">Select Size:</label>
+            <select id="size" class="size-dropdown"></select>
+        </div>
+
+        <div class="input-group">
+            <label for="linearFeet">Order in Linear Feet:</label>
+            <input type="number" id="linearFeet" placeholder="Enter feet">
+        </div>
+
+        <button id="calculateBtn">Calculate</button>
+
+        <div id="output"></div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const sizesData = [
+                { brand: "OC", size: "18×2", linearFeetInBox: 3 },
+                { brand: "OC", size: "16×2", linearFeetInBox: 6 },
+                { brand: "OC", size: "14×2", linearFeetInBox: 6 },
+                { brand: "Knauf", size: "12×2", linearFeetInBox: 6 },
+                { brand: "OC", size: "10×2", linearFeetInBox: 12 },
+                { brand: "OC", size: "18×1", linearFeetInBox: 6 },
+                { brand: "Knauf", size: "12×1/2", linearFeetInBox: 87 }
+            ];
+
+            const sizeDropdown = document.getElementById("size");
+            const brandRadios = document.getElementsByName("brand");
+            const calculateBtn = document.getElementById("calculateBtn");
+            const outputDiv = document.getElementById("output");
+
+            const colorGroups = {
+                orange: ["18×2", "16×2", "14×2", "12×2", "10×2"],
+                yellow: ["18×1", "16×1", "14×1", "12×1", "10×1"],
+                lightgreen: ["2 5/8×1/2", "2 1/2×1/2", "2 1/8×1/2", "2×1/2"],
+                lightblue: ["18×1 1/2", "16×1 1/2", "14×1 1/2", "12×1 1/2"]
+            };
+
+            let selectedBrand = "OC";
+
+            function getColorForSize(size) {
+                if (colorGroups.orange.includes(size)) return "orange";
+                if (colorGroups.yellow.includes(size)) return "yellow";
+                if (colorGroups.lightgreen.includes(size)) return "lightgreen";
+                if (colorGroups.lightblue.includes(size)) return "lightblue";
+                return "white";
+            }
+
+            function updateSizeDropdown() {
+                const filteredSizes = sizesData.filter(item => item.brand === selectedBrand);
+                sizeDropdown.innerHTML = "";
+
+                filteredSizes.forEach(item => {
+                    const option = document.createElement("option");
+                    option.value = item.size;
+                    option.textContent = item.size;
+                    option.style.backgroundColor = getColorForSize(item.size);
+                    sizeDropdown.appendChild(option);
+                });
+            }
+
+            brandRadios.forEach(radio => {
+                radio.addEventListener("change", function () {
+                    selectedBrand = this.value;
+                    updateSizeDropdown();
+                });
+            });
+
+            updateSizeDropdown();
+
+            calculateBtn.addEventListener("click", function () {
+                const selectedSize = sizeDropdown.value;
+                const linearFeetInput = document.getElementById("linearFeet").value;
+
+                if (!linearFeetInput || linearFeetInput <= 0 || linearFeetInput % 3 !== 0) {
+                    outputDiv.innerHTML = "<p class='error'>Please enter a valid order in linear feet divisible by 3.</p>";
+                    return;
+                }
+
+                const selectedData = sizesData.find(item => item.brand === selectedBrand && item.size === selectedSize);
+
+                if (selectedData) {
+                    const linearFeetInBox = selectedData.linearFeetInBox;
+                    const totalFeet = parseInt(linearFeetInput, 10);
+
+                    const boxes = Math.floor(totalFeet / linearFeetInBox);
+                    const pieces = (totalFeet % linearFeetInBox) / 3;
+
+                    outputDiv.innerHTML = `
+                        <p>Brand: ${selectedBrand}</p>
+                        <p>Size: ${selectedSize}</p>
+                        <p>Linear Feet in a box: ${linearFeetInBox}</p>
+                        <p>Order in Linear Feet: ${totalFeet}</p>
+                        <h4>Pick orders:</h4>
+                        <p>Box: ${boxes} (${boxes * linearFeetInBox} Linear feet)</p>
+                        <p>Pcs: ${pieces} Piece(s) (${pieces * 3} Linear feet)</p>
+                    `;
+                } else {
+                    outputDiv.innerHTML = "<p class='error'>Invalid size or brand selection.</p>";
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
